@@ -37,6 +37,7 @@ BEGIN {
                         '/cache/enable/route/3/*/*' => { expire => 60 },
                         '/cache/enable/query/single' => { expire => 60, query_keys => [qw/q/] },
                         '/cache/enable/query/multi' => { expire => 60, query_keys => [qw/q page rows/] },
+                        '/json/cache/enable' => { expire => 60 },
                     },
                 },
             },
@@ -48,6 +49,7 @@ BEGIN {
     use parent qw/Amon2::Web/;
 
     __PACKAGE__->load_plugin('Web::PageCache');
+    __PACKAGE__->load_plugin('Web::JSON');
 
     my $xslate = Text::Xslate->new(
         syntax => 'TTerse',
@@ -67,6 +69,8 @@ BEGIN {
         my $c = shift;
         if ($c->request->path_info =~ m!^/cache! ) {
             return $c->render('now');
+        } elsif ($c->request->path_info =~ m!^/json! ) {
+            return $c->render_json(+{ now => $c->now() });
         } else {
             return $c->create_response(404, [], []);
         }
@@ -323,6 +327,38 @@ subtest 'delete page cache' => sub {
 
         isnt $step4, $step2;
     };
+};
+
+subtest '/json/cache/enable' => sub {
+    $mech->get('/json/cache/enable');
+    is $mech->status(), 200;
+    is $mech->ct(), 'application/json';
+    my $step1 = $mech->content();
+
+    sleep(1);
+
+    $mech->get('/json/cache/enable');
+    is $mech->status(), 200;
+    is $mech->ct(), 'application/json';
+    my $step2 = $mech->content();
+
+    is $step2, $step1;
+};
+
+subtest '/json/cache/disable' => sub {
+    $mech->get('/json/cache/disable');
+    is $mech->status(), 200;
+    is $mech->ct(), 'application/json';
+    my $step1 = $mech->content();
+
+    sleep(1);
+
+    $mech->get('/json/cache/disable');
+    is $mech->status(), 200;
+    is $mech->ct(), 'application/json';
+    my $step2 = $mech->content();
+
+    isnt $step2, $step1;
 };
 
 done_testing;
