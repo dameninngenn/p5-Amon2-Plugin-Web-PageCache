@@ -87,12 +87,14 @@ my $mech = Test::WWW::Mechanize::PSGI->new(
 subtest '/cache/enable' => sub {
     $mech->get('/cache/enable');
     is $mech->status(), 200;
+    is $mech->ct(), 'text/html';
     my $step1 = $mech->content();
 
     sleep(1);
 
     $mech->get('/cache/enable');
     is $mech->status(), 200;
+    is $mech->ct(), 'text/html';
     my $step2 = $mech->content();
 
     is $step2, $step1;
