@@ -1,19 +1,19 @@
 NAME
-    Amon2::Plugin::Web::PageCache - Perl extention to do something
+    Amon2::Plugin::Web::PageCache - Page cache plugin for Amon2
 
 VERSION
     This document describes Amon2::Plugin::Web::PageCache version 0.01.
 
 SYNOPSIS
-        use Amon2::Plugin::Web::PageCache;
+
+    package MyApp::Web;
+    use Amon2::Web;
+
+    __PACKAGE__->load_plugin('Web::PageCache');
 
 DESCRIPTION
-    # TODO
 
-INTERFACE
-  Functions
-   "hello()"
-    # TODO
+    This plugin enables caching pages by using memcached.
 
 DEPENDENCIES
     Perl 5.8.1 or later.
@@ -24,7 +24,7 @@ BUGS
     cpan-RT.
 
 SEE ALSO
-    perl
+    Amon2
 
 AUTHOR
     dameninngenn <dameninngenn.owata {at} gmail.com>
