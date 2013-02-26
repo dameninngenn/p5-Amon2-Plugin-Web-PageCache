@@ -7,6 +7,7 @@ use t::Util;
 use Test::More;
 use Test::Requires 'Test::WWW::Mechanize::PSGI';
 use Text::Xslate;
+use Time::HiRes;
 
 our $TEST_MEMCACHED_SERVERS;
 BEGIN {
@@ -52,7 +53,7 @@ BEGIN {
         },
     );
 
-    sub now { time() }
+    sub now { Time::HiRes::time }
 
     sub create_view { $xslate }
 
@@ -78,8 +79,6 @@ subtest '/cache/enable on disable config' => sub {
     is $mech->status(), 200;
     my $step1 = $mech->content();
 
-    sleep(1);
-
     $mech->get('/cache/enable');
     is $mech->status(), 200;
     my $step2 = $mech->content();
@@ -91,8 +90,6 @@ subtest '/cache/disable on disable config' => sub {
     $mech->get('/cache/disable');
     is $mech->status(), 200;
     my $step1 = $mech->content();
-
-    sleep(1);
 
     $mech->get('/cache/disable');
     is $mech->status(), 200;

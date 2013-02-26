@@ -16,6 +16,7 @@ my $build = Module::Build->new(
         'String::Random' => 0,
         'File::Spec' => 0,
         'File::Basename' => 0,
+        'Time::HiRes' => 0,
     },
     configure_requires => { 'Module::Build' => '0.38' },
     requires           => {

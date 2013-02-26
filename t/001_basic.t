@@ -8,6 +8,7 @@ use Test::More;
 use Test::Requires 'Test::WWW::Mechanize::PSGI';
 use Text::Xslate;
 use String::Random qw(random_regex);
+use Time::HiRes;
 
 our $TEST_MEMCACHED_SERVERS;
 BEGIN {
@@ -61,7 +62,7 @@ BEGIN {
         },
     );
 
-    sub now { time() }
+    sub now { Time::HiRes::time }
 
     sub create_view { $xslate }
 
@@ -90,8 +91,6 @@ subtest '/cache/enable' => sub {
     is $mech->ct(), 'text/html';
     my $step1 = $mech->content();
 
-    sleep(1);
-
     $mech->get('/cache/enable');
     is $mech->status(), 200;
     is $mech->ct(), 'text/html';
@@ -105,8 +104,6 @@ subtest '/cache/disable' => sub {
     is $mech->status(), 200;
     my $step1 = $mech->content();
 
-    sleep(1);
-
     $mech->get('/cache/disable');
     is $mech->status(), 200;
     my $step2 = $mech->content();
@@ -119,15 +116,13 @@ subtest '/cache/enable/expire/3sec' => sub {
     is $mech->status(), 200;
     my $step1 = $mech->content();
 
-    sleep(1);
-
     $mech->get('/cache/enable/expire/3sec');
     is $mech->status(), 200;
     my $step2 = $mech->content();
 
     is $step2, $step1;
 
-    sleep(2);
+    sleep(3);
 
     $mech->get('/cache/enable/expire/3sec');
     is $mech->status(), 200;
@@ -143,15 +138,11 @@ subtest '/cache/enable/route' => sub {
         is $mech->status(), 200;
         my $step1 = $mech->content();
 
-        sleep(1);
-
         $mech->get('/cache/enable/route/1/' . $id);
         is $mech->status(), 200;
         my $step2 = $mech->content();
 
         is $step2, $step1;
-
-        sleep(1);
 
         $mech->get('/cache/enable/route/1/' . random_regex('\w\w\w\w'));
         is $mech->status(), 200;
@@ -166,15 +157,11 @@ subtest '/cache/enable/route' => sub {
         is $mech->status(), 200;
         my $step1 = $mech->content();
 
-        sleep(1);
-
         $mech->get('/cache/enable/route/2/' . $id);
         is $mech->status(), 200;
         my $step2 = $mech->content();
 
         is $step2, $step1;
-
-        sleep(1);
 
         $mech->get('/cache/enable/route/2/' . random_regex('\w\w\w\w'));
         is $mech->status(), 200;
@@ -189,15 +176,11 @@ subtest '/cache/enable/route' => sub {
         is $mech->status(), 200;
         my $step1 = $mech->content();
 
-        sleep(1);
-
         $mech->get('/cache/enable/route/3/' . $path);
         is $mech->status(), 200;
         my $step2 = $mech->content();
 
         is $step2, $step1;
-
-        sleep(1);
 
         $mech->get('/cache/enable/route/3/' . random_regex('\w\w\w\w') . '/' . random_regex('\w\w\w\w'));
         is $mech->status(), 200;
@@ -212,15 +195,11 @@ subtest '/cache/enable/query/single' => sub {
     is $mech->status(), 200;
     my $step1 = $mech->content();
 
-    sleep(1);
-
     $mech->get('/cache/enable/query/single?q=hoge');
     is $mech->status(), 200;
     my $step2 = $mech->content();
 
     isnt $step2, $step1;
-
-    sleep(1);
 
     $mech->get('/cache/enable/query/single?q=こんにちは');
     is $mech->status(), 200;
@@ -229,15 +208,11 @@ subtest '/cache/enable/query/single' => sub {
     isnt $step3, $step1;
     isnt $step3, $step2;
 
-    sleep(1);
-
     $mech->get('/cache/enable/query/single?q=');
     is $mech->status(), 200;
     my $step4 = $mech->content();
 
     is $step4, $step1;
-
-    sleep(1);
 
     $mech->get('/cache/enable/query/single?unknown=1');
     is $mech->status(), 200;
@@ -251,15 +226,11 @@ subtest '/cache/enable/query/multi' => sub {
     is $mech->status(), 200;
     my $step1 = $mech->content();
 
-    sleep(1);
-
     $mech->get('/cache/enable/query/multi?q=hoge&page=1&rows=20');
     is $mech->status(), 200;
     my $step2 = $mech->content();
 
     isnt $step2, $step1;
-
-    sleep(1);
 
     $mech->get('/cache/enable/query/multi?q=hoge&page=2&rows=20');
     is $mech->status(), 200;
@@ -268,15 +239,11 @@ subtest '/cache/enable/query/multi' => sub {
     isnt $step3, $step1;
     isnt $step3, $step2;
 
-    sleep(1);
-
     $mech->get('/cache/enable/query/multi?q=hoge&page=2&rows=20&unknown=1');
     is $mech->status(), 200;
     my $step4 = $mech->content();
 
     is $step4, $step3;
-
-    sleep(1);
 
     $mech->get('/cache/enable/query/multi?unknown=1');
     is $mech->status(), 200;
@@ -291,8 +258,6 @@ subtest 'delete page cache' => sub {
         is $mech->status(), 200;
         my $step1 = $mech->content();
 
-        sleep(1);
-
         MyApp::Web->delete_page_cache({ name => 'MyApp::Web', path => '/cache/enable' });
         $mech->get('/cache/enable');
         is $mech->status(), 200;
@@ -306,13 +271,9 @@ subtest 'delete page cache' => sub {
         is $mech->status(), 200;
         my $step1 = $mech->content();
 
-        sleep(1);
-
         $mech->get('/cache/enable/query/multi?q=こんにちは&page=2&rows=20');
         is $mech->status(), 200;
         my $step2 = $mech->content();
-
-        sleep(1);
 
         MyApp::Web->delete_page_cache({ name => 'MyApp::Web', path => '/cache/enable/query/multi' });
         $mech->get('/cache/enable/query/multi?q=こんにちは&page=1&rows=20');
@@ -320,8 +281,6 @@ subtest 'delete page cache' => sub {
         my $step3 = $mech->content();
 
         isnt $step3, $step1;
-
-        sleep(1);
 
         $mech->get('/cache/enable/query/multi?q=こんにちは&page=2&rows=20');
         is $mech->status(), 200;
@@ -337,8 +296,6 @@ subtest '/json/cache/enable' => sub {
     is $mech->ct(), 'application/json';
     my $step1 = $mech->content();
 
-    sleep(1);
-
     $mech->get('/json/cache/enable');
     is $mech->status(), 200;
     is $mech->ct(), 'application/json';
@@ -352,8 +309,6 @@ subtest '/json/cache/disable' => sub {
     is $mech->status(), 200;
     is $mech->ct(), 'application/json';
     my $step1 = $mech->content();
-
-    sleep(1);
 
     $mech->get('/json/cache/disable');
     is $mech->status(), 200;
